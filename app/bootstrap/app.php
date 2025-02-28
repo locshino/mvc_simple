@@ -7,7 +7,7 @@ if (session_status() === PHP_SESSION_NONE) {
   session_start();
 }
 
-setOldInput(); // Lưu dữ liệu cũ của form vào session
+// setOldInput();
 loadEnv(); // Load .env
 handleRouting(); // Xử lý routing
 

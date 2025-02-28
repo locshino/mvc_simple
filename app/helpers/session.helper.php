@@ -16,11 +16,18 @@ function old(string $key, $default = null): mixed
 }
 
 /**
- * Lưu dữ liệu đầu vào cũ vào session
+ * Lưu dữ liệu cũ vào session để sử dụng lại (ví dụ: điền lại form)
+ *
+ * @param ?array $data Dữ liệu cần lưu, mặc định lấy từ $_POST và $_GET
+ * @return void
  */
 function setOldInput(?array $data = null): void
 {
-  $_SESSION['old'] = $data ?? array_merge($_POST ?? [], $_GET ?? []);
+  // Chỉ lưu nếu có dữ liệu từ POST hoặc GET, tránh ghi đè không cần thiết
+  $defaultData = array_merge($_POST ?? [], $_GET ?? []);
+  if ($data !== null || ! empty($defaultData)) {
+    $_SESSION['old'] = $data ?? $defaultData;
+  }
 }
 
 /**
