@@ -1,6 +1,4 @@
 <?php
-use eftec\bladeone\BladeOne;
-
 function view(string $view, array $data = [], bool $debug = false)
 {
   static $blade = null;
@@ -13,8 +11,10 @@ function view(string $view, array $data = [], bool $debug = false)
     if (! file_exists($views)) {
       mkdir($views, 0755, true);
     }
-    $mode = $debug ? BladeOne::MODE_DEBUG : BladeOne::MODE_AUTO;
-    $blade = new BladeOne($views, $cache, $mode);
+    $mode = $debug
+      ? eftec\bladeone\BladeOne::MODE_DEBUG
+      : eftec\bladeone\BladeOne::MODE_AUTO;
+    $blade = new eftec\bladeone\BladeOne($views, $cache, $mode);
   }
   echo $blade->run($view, $data);
 }
