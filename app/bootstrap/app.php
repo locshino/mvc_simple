@@ -6,8 +6,12 @@ require_once __DIR__.'/../helpers/index.php';
 if (session_status() === PHP_SESSION_NONE) {
   session_start();
 }
+// Load .env
+loadEnv(); 
+
+// Set timezone
+date_default_timezone_set(env('APP_TIMEZONE', 'UTC'));
 
 // setOldInput();
-loadEnv(); // Load .env
 handleRouting(); // Xử lý routing
 
