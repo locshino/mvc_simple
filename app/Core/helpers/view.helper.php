@@ -3,8 +3,8 @@ function view(string $view, array $data = [], bool $debug = false)
 {
   static $blade = null;
   if ($blade === null) {
-    $views = __DIR__.'/../Views';
-    $cache = __DIR__.'/../storage/blade';
+    $views = basePath('app/Views');
+    $cache = basePath('app/storage/blade');
     if (! file_exists($cache)) {
       mkdir($cache, 0755, true);
     }

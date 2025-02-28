@@ -8,6 +8,26 @@ function session(string $key, $default = null): mixed
 }
 
 /**
+ * Thiết lập giá trị cho session
+ */
+function session_set(string $key, mixed $value): void
+{
+  $_SESSION[$key] = $value;
+}
+
+/**
+ * Xóa giá trị của session theo key
+ */
+function session_delete(string $key): void
+{
+  if (! isset($_SESSION[$key])) {
+    return;
+  }
+
+  unset($_SESSION[$key]);
+}
+
+/**
  * Lấy dữ liệu cũ của form
  */
 function old(string $key, $default = null): mixed
