@@ -1,5 +1,5 @@
 <?php
-namespace App\Utils\Asset;
+namespace App\Core\Asset;
 
 class AssetResponse
 {
