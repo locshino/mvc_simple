@@ -1,4 +1,5 @@
-app/storage/*
+app/storage/blade/*
+app/storage/logs/*
 app/assets/uploads/*
 
 vendor
