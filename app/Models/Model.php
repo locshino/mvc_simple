@@ -22,13 +22,14 @@ class Model
   {
     if (! self::$pdo) {
       try {
-        $db_host = $_ENV['DB_HOST'] ?? 'localhost';
-        $db_database = $_ENV['DB_DATABASE'] ?? 'mysql';
-        $db_name = $_ENV['DB_NAME'] ?? '';
-        $db_user = $_ENV['DB_USER'] ?? '';
-        $db_pass = $_ENV['DB_PASS'] ?? '';
+        $db_host = env('DB_HOST', 'localhost');
+        $db_database = env('DB_DATABASE', 'mysql');
+        $db_name = env('DB_NAME', 'test');
+        $db_user = env('DB_USER', 'root');
+        $db_pass = env('DB_PASS', '');
+        $db_charset = env('DB_CHARSET', 'utf8mb4');
 
-        $dsn = "$db_database:host=$db_host;dbname=$db_name;charset=utf8mb4";
+        $dsn = "$db_database:host=$db_host;dbname=$db_name;charset=$db_charset";
 
         self::$pdo = new PDO(
           $dsn,
