@@ -2,7 +2,7 @@
 /** @var Phroute\Phroute\RouteCollector $route */
 
 use App\Controllers\HomeController;
-use App\Utils\Asset\Asset;
+use App\Core\Asset\Asset;
 
 $route->get('/', [HomeController::class, 'index']);
 
