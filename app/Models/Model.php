@@ -116,31 +116,12 @@ class Model
   }
 
   /**
-   * Tìm một bản ghi theo khóa chính
+   * Tìm một bản ghi theo điều kiện
    *
-   * @param int|string $id Giá trị khóa chính
-   * @return array|null
+   * @param array $conditions Điều kiện WHERE (key => value)
+   * @return array|null Bản ghi đầu tiên hoặc null nếu không tìm thấy
    */
-  public static function find(int|string $id): ?array
-  {
-    if (empty(static::$table)) {
-      throw new RuntimeException('Table name must be defined in child class');
-    }
-
-    $primaryKey = static::$primaryKey;
-    $table = static::$table;
-    $stmt = self::query("SELECT * FROM `$table` WHERE `$primaryKey` = ?", [$id]);
-    return $stmt->fetch() ?: null;
-  }
-
-  /**
-   * Lấy tất cả bản ghi
-   *
-   * @param array $conditions Điều kiện WHERE (tùy chọn, ví dụ: ['status' => 1])
-   * @param array $orderBy Cột và hướng sắp xếp (ví dụ: ['column' => 'created_at', 'direction' => 'DESC'])
-   * @return array
-   */
-  public static function all(array $conditions = [], array $orderBy = []): array
+  public static function find(array $conditions = []): ?array
   {
     if (empty(static::$table)) {
       throw new RuntimeException('Table name must be defined in child class');
@@ -150,34 +131,68 @@ class Model
     $sql = "SELECT * FROM `$table`";
     $params = [];
 
-    // Điều kiện WHERE
     if (! empty($conditions)) {
       $where = implode(' AND ', array_map(fn ($key) => "`$key` = ?", array_keys($conditions)));
       $sql .= " WHERE ".$where;
       $params = array_values($conditions);
     }
 
-    // Sắp xếp
-    if (! empty($orderBy)) {
-      $column = $orderBy['column'] ?? static::$primaryKey; // Mặc định theo primary key
-      $direction = strtoupper($orderBy['direction'] ?? 'ASC'); // Mặc định ASC
-      if (! in_array($direction, ['ASC', 'DESC'])) {
-        $direction = 'ASC'; // Bảo mật: chỉ cho phép ASC hoặc DESC
+    $sql .= " LIMIT 1"; // Chỉ lấy bản ghi đầu tiên
+
+    $stmt = self::query($sql, $params);
+    return $stmt->fetch() ?: null;
+  }
+
+  /**
+   * Lấy tất cả bản ghi với điều kiện, giới hạn và offset
+   *
+   * @param array $conditions Điều kiện WHERE (key => value)
+   * @param int|null $limit Số bản ghi tối đa
+   * @param int|null $offset Vị trí bắt đầu
+   * @return array
+   */
+  public static function all(array $conditions = [], ?int $limit = null, ?int $offset = null): array
+  {
+    if (empty(static::$table)) {
+      throw new RuntimeException('Table name must be defined in child class');
+    }
+
+    $table = static::$table;
+    $sql = "SELECT * FROM `$table`";
+    $params = [];
+
+    if (! empty($conditions)) {
+      $where = implode(' AND ', array_map(fn ($key) => "`$key` = ?", array_keys($conditions)));
+      $sql .= " WHERE ".$where;
+      $params = array_values($conditions);
+    }
+
+    if ($limit !== null) {
+      $sql .= " LIMIT ?";
+      $params[] = $limit;
+    }
+
+    if ($offset !== null) {
+      if ($limit === null) {
+        throw new RuntimeException('OFFSET requires LIMIT to be set');
       }
-      $sql .= " ORDER BY `$column` $direction";
+      $sql .= " OFFSET ?";
+      $params[] = $offset;
     }
 
     return self::query($sql, $params)->fetchAll();
   }
 
   /**
-   * Lấy tất cả bản ghi, sắp xếp theo cột mới nhất (mặc định created_at DESC)
+   * Lấy bản ghi mới nhất theo cột, với điều kiện, giới hạn và offset
    *
    * @param string $column Cột để sắp xếp (mặc định created_at)
-   * @param array $conditions Điều kiện WHERE (tùy chọn, ví dụ: ['status' => 1])
+   * @param array $conditions Điều kiện WHERE (key => value)
+   * @param int|null $limit Số bản ghi tối đa
+   * @param int|null $offset Vị trí bắt đầu
    * @return array
    */
-  public static function latest(string $column = 'created_at', array $conditions = []): array
+  public static function latest(string $column = 'created_at', array $conditions = [], ?int $limit = null, ?int $offset = null): array
   {
     if (empty(static::$table)) {
       throw new RuntimeException('Table name must be defined in child class');
@@ -187,15 +202,26 @@ class Model
     $sql = "SELECT * FROM `$table`";
     $params = [];
 
-    // Điều kiện WHERE
     if (! empty($conditions)) {
       $where = implode(' AND ', array_map(fn ($key) => "`$key` = ?", array_keys($conditions)));
       $sql .= " WHERE ".$where;
       $params = array_values($conditions);
     }
 
-    // Sắp xếp theo cột chỉ định, mặc định DESC
     $sql .= " ORDER BY `$column` DESC";
+
+    if ($limit !== null) {
+      $sql .= " LIMIT ?";
+      $params[] = $limit;
+    }
+
+    if ($offset !== null) {
+      if ($limit === null) {
+        throw new RuntimeException('OFFSET requires LIMIT to be set');
+      }
+      $sql .= " OFFSET ?";
+      $params[] = $offset;
+    }
 
     return self::query($sql, $params)->fetchAll();
   }
@@ -224,33 +250,114 @@ class Model
   }
 
   /**
-   * Cập nhật bản ghi
+   * Cập nhật bản ghi theo điều kiện
    *
-   * @param int|string $id Giá trị khóa chính
-   * @param array $data Dữ liệu cần cập nhật
+   * @param array $data Dữ liệu cần cập nhật (key => value)
+   * @param array $conditions Điều kiện WHERE (key => value)
    * @return int Số hàng bị ảnh hưởng
    */
-  public static function update(int|string $id, array $data): int
+  public static function update(array $data, array $conditions = []): int
   {
     if (empty(static::$table)) {
       throw new RuntimeException('Table name must be defined in child class');
+    }
+
+    if (empty($data)) {
+      throw new RuntimeException('No data provided to update');
+    }
+
+    $table = static::$table;
+    $set = implode(',', array_map(fn ($key) => "`$key` = ?", array_keys($data)));
+    $sql = "UPDATE `$table` SET $set";
+    $params = array_values($data);
+
+    if (! empty($conditions)) {
+      $where = implode(' AND ', array_map(fn ($key) => "`$key` = ?", array_keys($conditions)));
+      $sql .= " WHERE ".$where;
+      $params = array_merge($params, array_values($conditions));
+    }
+
+    return self::exec($sql, $params);
+  }
+
+  /**
+   * Xóa bản ghi theo điều kiện
+   *
+   * @param array $conditions Điều kiện WHERE (key => value)
+   * @return int Số hàng bị ảnh hưởng
+   */
+  public static function delete(array $conditions = []): int
+  {
+    if (empty(static::$table)) {
+      throw new RuntimeException('Table name must be defined in child class');
+    }
+
+    $table = static::$table;
+    $sql = "DELETE FROM `$table`";
+    $params = [];
+
+    if (! empty($conditions)) {
+      $where = implode(' AND ', array_map(fn ($key) => "`$key` = ?", array_keys($conditions)));
+      $sql .= " WHERE ".$where;
+      $params = array_values($conditions);
+    } else {
+      throw new RuntimeException('Conditions are required to prevent accidental deletion of all records');
+    }
+
+    return self::exec($sql, $params);
+  }
+
+  /**
+   * Tìm một bản ghi theo khóa chính
+   *
+   * @param int|string $id Giá trị khóa chính
+   * @return array|null Bản ghi hoặc null nếu không tìm thấy
+   */
+  public static function findById(int|string $id): ?array
+  {
+    if (empty(static::$table)) {
+      throw new RuntimeException('Table name must be defined in child class');
+    }
+
+    $primaryKey = static::$primaryKey;
+    $table = static::$table;
+    $stmt = self::query("SELECT * FROM `$table` WHERE `$primaryKey` = ?", [$id]);
+    return $stmt->fetch() ?: null;
+  }
+
+  /**
+   * Cập nhật một bản ghi theo khóa chính
+   *
+   * @param int|string $id Giá trị khóa chính
+   * @param array $data Dữ liệu cần cập nhật (key => value)
+   * @return int Số hàng bị ảnh hưởng
+   */
+  public static function updateById(int|string $id, array $data): int
+  {
+    if (empty(static::$table)) {
+      throw new RuntimeException('Table name must be defined in child class');
+    }
+
+    if (empty($data)) {
+      throw new RuntimeException('No data provided to update');
     }
 
     $table = static::$table;
     $primaryKey = static::$primaryKey;
     $set = implode(',', array_map(fn ($key) => "`$key` = ?", array_keys($data)));
-
     $sql = "UPDATE `$table` SET $set WHERE `$primaryKey` = ?";
-    return self::exec($sql, array_merge(array_values($data), [$id]));
+    $params = array_merge(array_values($data), [$id]);
+
+    return self::exec($sql, $params);
   }
 
   /**
-   * Xóa bản ghi
+   * Xóa bản ghi theo khóa chính (ID)
    *
    * @param int|string $id Giá trị khóa chính
    * @return int Số hàng bị ảnh hưởng
    */
-  public static function delete(int|string $id): int
+  public static function deleteById(int|string $id): int
   {
     if (empty(static::$table)) {
       throw new RuntimeException('Table name must be defined in child class');
@@ -258,7 +365,9 @@ class Model
 
     $table = static::$table;
     $primaryKey = static::$primaryKey;
-    return self::exec("DELETE FROM `$table` WHERE `$primaryKey` = ?", [$id]);
+    $sql = "DELETE FROM `$table` WHERE `$primaryKey` = ?";
+
+    return self::exec($sql, [$id]);
   }
 
   /**
