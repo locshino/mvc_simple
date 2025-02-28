@@ -8,10 +8,19 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 // Load .env
-loadEnv(); 
+loadEnv();
 
 // Set timezone
 date_default_timezone_set(env('APP_TIMEZONE', 'UTC'));
+
+// Thiết lập cấu hình mặc định cho cookie
+cookie_setup([
+  'ttl' => 60 * 60 * 24 * 30, // 30 ngày
+  'path' => '/',
+  'secure' => false, // Thay true nếu dùng HTTPS
+  'httponly' => true,
+  'samesite' => 'Strict', // Có thể dùng Lax hoặc None
+]);
 
 // setOldInput();
 handleRouting(); // Xử lý routing
