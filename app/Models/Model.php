@@ -131,10 +131,11 @@ class Model
   /**
    * Lấy tất cả bản ghi
    *
-   * @param array $conditions Điều kiện WHERE (tùy chọn)
+   * @param array $conditions Điều kiện WHERE (tùy chọn, ví dụ: ['status' => 1])
+   * @param array $orderBy Cột và hướng sắp xếp (ví dụ: ['column' => 'created_at', 'direction' => 'DESC'])
    * @return array
    */
-  public static function all(array $conditions = []): array
+  public static function all(array $conditions = [], array $orderBy = []): array
   {
     if (empty(static::$table)) {
       throw new RuntimeException('Table name must be defined in child class');
@@ -144,11 +145,52 @@ class Model
     $sql = "SELECT * FROM `$table`";
     $params = [];
 
+    // Điều kiện WHERE
     if (! empty($conditions)) {
       $where = implode(' AND ', array_map(fn ($key) => "`$key` = ?", array_keys($conditions)));
       $sql .= " WHERE ".$where;
       $params = array_values($conditions);
     }
+
+    // Sắp xếp
+    if (! empty($orderBy)) {
+      $column = $orderBy['column'] ?? static::$primaryKey; // Mặc định theo primary key
+      $direction = strtoupper($orderBy['direction'] ?? 'ASC'); // Mặc định ASC
+      if (! in_array($direction, ['ASC', 'DESC'])) {
+        $direction = 'ASC'; // Bảo mật: chỉ cho phép ASC hoặc DESC
+      }
+      $sql .= " ORDER BY `$column` $direction";
+    }
+
+    return self::query($sql, $params)->fetchAll();
+  }
+
+  /**
+   * Lấy tất cả bản ghi, sắp xếp theo cột mới nhất (mặc định created_at DESC)
+   *
+   * @param string $column Cột để sắp xếp (mặc định created_at)
+   * @param array $conditions Điều kiện WHERE (tùy chọn, ví dụ: ['status' => 1])
+   * @return array
+   */
+  public static function latest(string $column = 'created_at', array $conditions = []): array
+  {
+    if (empty(static::$table)) {
+      throw new RuntimeException('Table name must be defined in child class');
+    }
+
+    $table = static::$table;
+    $sql = "SELECT * FROM `$table`";
+    $params = [];
+
+    // Điều kiện WHERE
+    if (! empty($conditions)) {
+      $where = implode(' AND ', array_map(fn ($key) => "`$key` = ?", array_keys($conditions)));
+      $sql .= " WHERE ".$where;
+      $params = array_values($conditions);
+    }
+
+    // Sắp xếp theo cột chỉ định, mặc định DESC
+    $sql .= " ORDER BY `$column` DESC";
 
     return self::query($sql, $params)->fetchAll();
   }
