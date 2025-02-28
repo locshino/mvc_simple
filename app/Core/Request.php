@@ -118,7 +118,13 @@ class Request
    * Validate dữ liệu request và tổng hợp lỗi
    *
    * @param array $rules Quy tắc validate (field => rule hoặc rule array)
-   * ví dụ: ['email' => 'required|email', 'password' => 'required|min:6']
+   * Các rule hỗ trợ: required, nullable, email, min, max, mimes, max_size
+   * ví dụ: $rules = [
+   * 'email' => 'required|email', 
+   * 'password' => 'required|min:6', 
+   * 'avatar' => 'nullable|mimes:jpg,png|max_size:2048'
+   * ];
+   * 
    * @param array|null $data Dữ liệu cần validate (mặc định dùng all())
    * @return bool Trả về true nếu hợp lệ, false nếu có lỗi
    */
@@ -131,6 +137,9 @@ class Request
       $rulesArray = is_array($ruleSet) ? $ruleSet : explode('|', $ruleSet);
       $value = $data[$field] ?? '';
       $isEmpty = empty(trim($value));
+      $isFileField = $this->hasFile($field);
+      $file = $isFileField ? $this->file($field) : null;
+      $fileEmpty = $isFileField && (! $this->hasFile($field) || empty($file['name']) || $file['error'] === UPLOAD_ERR_NO_FILE);
 
       foreach ($rulesArray as $rule) {
         if (strpos($rule, ':') !== false) {
@@ -140,43 +149,82 @@ class Request
           $param = null;
         }
 
-        switch ($ruleName) {
-          case 'required':
-            if ($isEmpty) {
-              $errors[] = "Trường $field không được để trống!";
-            }
-            break;
+        if ($isFileField) {
+          // Xử lý rule cho file
+          switch ($ruleName) {
+            case 'required':
+              if ($fileEmpty) {
+                $errors[] = "Trường $field phải có file upload!";
+              }
+              break;
 
-          case 'nullable':
-            if ($isEmpty) {
-              continue 2;
-            }
-            break;
+            case 'nullable':
+              if ($fileEmpty) {
+                continue 2; // Bỏ qua các rule khác nếu file trống
+              }
+              break;
 
-          case 'email':
-            if (! $isEmpty && ! filter_var($value, FILTER_VALIDATE_EMAIL)) {
-              $errors[] = "Trường $field phải là email hợp lệ!";
-            }
-            break;
+            case 'mimes':
+              if (! $fileEmpty && $file['error'] === UPLOAD_ERR_OK) {
+                $allowedMimes = explode(',', $param);
+                $fileMime = mime_content_type($file['tmp_name']);
+                $fileExt = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+                $mimeMatch = in_array($fileMime, $allowedMimes) || in_array($fileExt, $allowedMimes);
+                if (! $mimeMatch) {
+                  $errors[] = "Trường $field phải là file có định dạng: $param!";
+                }
+              }
+              break;
 
-          case 'min':
-            if (! $isEmpty && strlen($value) < (int) $param) {
-              $errors[] = "Trường $field phải có ít nhất $param ký tự!";
-            }
-            break;
+            case 'max_size':
+              if (! $fileEmpty && $file['error'] === UPLOAD_ERR_OK) {
+                $maxSize = (int) $param * 1024; // KB to bytes
+                if ($file['size'] > $maxSize) {
+                  $errors[] = "Trường $field không được vượt quá $param KB!";
+                }
+              }
+              break;
+          }
+        } else {
+          // Xử lý rule cho text
+          switch ($ruleName) {
+            case 'required':
+              if ($isEmpty) {
+                $errors[] = "Trường $field không được để trống!";
+              }
+              break;
 
-          case 'max':
-            if (! $isEmpty && strlen($value) > (int) $param) {
-              $errors[] = "Trường $field không được vượt quá $param ký tự!";
-            }
-            break;
+            case 'nullable':
+              if ($isEmpty) {
+                continue 2;
+              }
+              break;
+
+            case 'email':
+              if (! $isEmpty && ! filter_var($value, FILTER_VALIDATE_EMAIL)) {
+                $errors[] = "Trường $field phải là email hợp lệ!";
+              }
+              break;
+
+            case 'min':
+              if (! $isEmpty && strlen($value) < (int) $param) {
+                $errors[] = "Trường $field phải có ít nhất $param ký tự!";
+              }
+              break;
+
+            case 'max':
+              if (! $isEmpty && strlen($value) > (int) $param) {
+                $errors[] = "Trường $field không được vượt quá $param ký tự!";
+              }
+              break;
+          }
         }
       }
     }
 
     if (! empty($errors)) {
-      $this->setOldInput($data); // Lưu dữ liệu cũ
-      flashError($errors); // Flash tất cả lỗi
+      $this->setOldInput($data);
+      flashError($errors);
       return false;
     }
 
