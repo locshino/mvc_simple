@@ -1,5 +1,4 @@
 <?php
-namespace App\Helpers;
 
 function dd($data, $isError = false): never
 {
