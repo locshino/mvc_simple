@@ -99,14 +99,19 @@ class Model
   }
 
   /**
-   * Chạy truy vấn và trả về tất cả kết quả
+   * Thực thi truy vấn SQL tùy chỉnh và trả về tất cả bản ghi
    *
-   * @param string $sql Câu lệnh SQL
-   * @param array $params Mảng chứa các giá trị tham số
-   * @return array
+   * @param string $sql Câu lệnh SQL (thường là SELECT)
+   * @param array $params Mảng chứa các giá trị tham số để bind
+   * @param int|null $limit Số lượng bản ghi tối đa (tùy chọn)
+   * @return array Mảng chứa tất cả bản ghi từ truy vấn
    */
-  public static function raw(string $sql, array $params = []): array
+  public static function getAll(string $sql, array $params = [], ?int $limit = null): array
   {
+    if ($limit !== null) {
+      $sql .= " LIMIT ?";
+      $params[] = $limit;
+    }
     return self::query($sql, $params)->fetchAll();
   }
 
