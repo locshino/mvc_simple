@@ -4,7 +4,7 @@ function view(string $view, array $data = [], bool $debug = false)
   static $blade = null;
   if ($blade === null) {
     $views = __DIR__.'/../Views';
-    $cache = __DIR__.'/../storage';
+    $cache = __DIR__.'/../storage/blade';
     if (! file_exists($cache)) {
       mkdir($cache, 0755, true);
     }
@@ -16,5 +16,5 @@ function view(string $view, array $data = [], bool $debug = false)
       : eftec\bladeone\BladeOne::MODE_AUTO;
     $blade = new eftec\bladeone\BladeOne($views, $cache, $mode);
   }
-  echo $blade->run($view, $data);
+  return $blade->run($view, $data);
 }

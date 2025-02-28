@@ -11,20 +11,40 @@ function handleRouting(): void
     // Lấy URI và sanitize
     $uri = rawurldecode(parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH));
     $uri = filter_var($uri, FILTER_SANITIZE_URL);
-    $uri = rtrim($uri, '/') ?: '/'; // Chuẩn hóa URI
-    $method = $_SERVER['REQUEST_METHOD'];
+    $uri = rtrim($uri, '/') ?: '/';
+    $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 
-    $dispatcher->dispatch($method, $uri);
+    // Log request
+    app_log("Request: $method $uri", 'info');
+
+    $response = $dispatcher->dispatch($method, $uri);
+
+    // Log response
+    app_log("Response dispatched for $method $uri", 'info');
+
+    echo $response;
 
   } catch (Phroute\Phroute\Exception\HttpRouteNotFoundException $e) {
+    app_log("404 Not Found: {$e->getMessage()} | URI: $uri", 'error');
     http_response_code(404);
-    echo "404 Not Found";
-  } catch (Phroute\Phroute\Exception\HttpRouteNotFoundException $e) {
+    echo view('errors.404', ['message' => 'Trang không tìm thấy']);
+  } catch (Phroute\Phroute\Exception\HttpMethodNotAllowedException $e) {
+    app_log("405 Method Not Allowed: {$e->getMessage()} | Method: $method | URI: $uri", 'error');
     http_response_code(405);
-    echo "405 Method Not Allowed";
+    echo view('errors.405', ['message' => 'Phương thức không được phép']);
   } catch (Exception $e) {
+    app_log("500 Internal Server Error: {$e->getMessage()} | File: {$e->getFile()} | Line: {$e->getLine()}", 'error');
     http_response_code(500);
-    echo "500 Internal Server Error: ".$e->getMessage();
+    if (env('APP_DEBUG', false)) {
+      echo view('errors.500', [
+        'message' => 'Lỗi hệ thống',
+        'error' => $e->getMessage(),
+        'file' => $e->getFile(),
+        'line' => $e->getLine()
+      ]);
+    } else {
+      echo view('errors.500', ['message' => 'Có lỗi xảy ra, vui lòng thử lại sau']);
+    }
   }
 }
 
@@ -36,6 +56,6 @@ function redirect(string $url): never
 
 function back(): never
 {
-  header('Location: '.($_SERVER['HTTP_REFERER'] ?? '/'));
+  header('Location: '.($_SERVER['HTTP_REFERER'] ?? env('APP_URL', '/')));
   exit();
 }

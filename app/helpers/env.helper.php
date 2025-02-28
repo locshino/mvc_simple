@@ -20,7 +20,7 @@ function loadEnv(string $path = ''): void
     $dotenv->load();
   } catch (Exception $e) {
     // Ghi log lỗi thay vì echo trực tiếp
-    error_log("Environment error: ".$e->getMessage());
+    app_log("Environment error: ".$e->getMessage(), 'error');
     // Nếu đang debug, hiển thị lỗi chi tiết
     if (env('APP_DEBUG', false)) {
       die("Environment error: ".$e->getMessage());
