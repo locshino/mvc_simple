@@ -1,0 +1,6 @@
+app/storage/*
+app/assets/uploads/*
+
+vendor
+
+.env

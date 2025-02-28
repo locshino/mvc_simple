@@ -1,0 +1,12 @@
+RewriteEngine On
+
+# Chặn truy cập trực tiếp vào các file cấu hình quan trọng
+<FilesMatch "(\.env|\.htaccess|\.git|composer\.*|config\.*|database\.*)">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
+
+# Chuyển hướng tất cả request không phải file hoặc thư mục thực tế đến index.php
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ index.php [QSA,L]
