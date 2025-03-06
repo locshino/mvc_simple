@@ -3,5 +3,5 @@ namespace App\Models;
 
 class Example extends Model
 {
-  protected static $table = 'examples';
+  protected static string $table = 'examples';
 }

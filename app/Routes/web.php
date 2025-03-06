@@ -7,6 +7,6 @@ use App\Core\Asset\Asset;
 $route->get('/', [HomeController::class, 'index']);
 
 // Route for serving images ( DON'T REMOVE THIS LINE )
-$route->get('/assets/img/{fileName}', function ($fileName) {
+$route->get('/assets/uploads/{fileName}', function ($fileName) {
   Asset::downloadImage($fileName);
 });

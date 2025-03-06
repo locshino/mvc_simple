@@ -4,7 +4,7 @@ namespace App\Core\Configs;
 class Cookie
 {
   private static array $defaultOptions = [
-    'ttl' => 0,        // Thời gian sống (giây)
+    'ttl' => 3600,        // Thời gian sống (giây)
     'path' => '/',     // Đường dẫn
     'domain' => null,  // Domain
     'secure' => false, // Chỉ gửi qua HTTPS

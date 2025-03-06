@@ -6,6 +6,6 @@ class HomeController extends Controller
   public function index()
   {
     $title = 'Home page';
-    return view('welcome', compact('title'));
+    return viewPage('welcome', compact('title'));
   }
 }
