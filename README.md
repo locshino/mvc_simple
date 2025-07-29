@@ -46,16 +46,19 @@ mvc_simple/
 ### With Composer (Recommended)
 
 1. Clone the repository:
+
 ```bash
 git clone https://github.com/locshino/mvc_simple.git
 ```
 
 2. Install dependencies:
+
 ```bash
 composer install
 ```
 
 3. Copy the environment file:
+
 ```bash
 copy .env.example .env
 ```
@@ -67,6 +70,7 @@ If you prefer not to use Composer, you can still use the framework at a basic le
 1. Clone or download the repository
 
 2. Copy the environment configuration file:
+
 ```bash
 copy env.example.php env.php
 ```
@@ -76,6 +80,7 @@ copy env.example.php env.php
 > **Note:** When using the framework without Composer, some advanced features that depend on external libraries (BladeOne, PHRoute, PHP dotenv) will be limited. However, you can still use the core MVC architecture and basic routing functionality.
 
 4. Configure your environment variables in `.env`:
+
 ```env
 APP_NAME=MVCSimple
 APP_ENV=local
@@ -93,10 +98,12 @@ DB_PASSWORD=your_password
 5. Configure your web server:
 
 For Apache (.htaccess is included):
+
 - Point the document root to the `public` directory
 - Ensure mod_rewrite is enabled
 
 For Nginx:
+
 ```nginx
 location / {
     try_files $uri $uri/ /index.php?$query_string;
@@ -107,7 +114,8 @@ location / {
 
 ### Creating a Controller
 
-```php:c:\Laragron\www\mvc_simple\app\Controllers\UserController.php
+```php:
+// c:\Laragron\www\mvc_simple\app\Controllers\UserController.php
 namespace App\Controllers;
 
 class UserController
@@ -126,7 +134,8 @@ class UserController
 
 ### Defining Routes
 
-```php:c:\Laragron\www\mvc_simple\app\Routes\web.php
+```php:
+// c:\Laragron\www\mvc_simple\app\Routes\web.php
 use App\Controllers\UserController;
 
 $router->get('/users', [UserController::class, 'index']);
@@ -135,7 +144,8 @@ $router->get('/users/{id}', [UserController::class, 'show']);
 
 ### Creating a Model
 
-```php:c:\Laragron\www\mvc_simple\app\Models\User.php
+```php:
+// c:\Laragron\www\mvc_simple\app\Models\User.php
 namespace App\Models;
 
 class User
@@ -160,7 +170,8 @@ Views can be created using either Blade templates or standard PHP files. Here ar
 
 #### Using Blade Template
 
-```php:c:\Laragron\www\mvc_simple\app\Views\users\index.blade.php
+```php:
+// c:\Laragron\www\mvc_simple\app\Views\users\index.blade.php
 @extends('layouts.app')
 
 @section('content')
@@ -175,7 +186,8 @@ Views can be created using either Blade templates or standard PHP files. Here ar
 
 #### Using Standard PHP File
 
-```php:c:\Laragron\www\mvc_simple\app\Views\users\show.php
+```php:
+// c:\Laragron\www\mvc_simple\app\Views\users\show.php
 <?php view('layouts.app'); ?>
 
 <div class="container">
@@ -193,6 +205,7 @@ The framework includes dedicated storage directories:
 - `storage/uploads` - File uploads
 
 Make sure these directories are writable:
+
 ```bash
 chmod -R 775 app/storage
 ```
@@ -226,4 +239,5 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Support
 
 For support, please open an issue in the GitHub repository or contact [locshino123@gmail.com](mailto:locshino123@gmail.com).
+
 ```
