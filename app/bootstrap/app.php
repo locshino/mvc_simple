@@ -1,5 +1,17 @@
 <?php
-require_once __DIR__.'/../../vendor/autoload.php';
+// Define path to Composer's autoloader
+$vendorAutoload = __DIR__.'/../../vendor/autoload.php';
+
+// Check if Composer's autoloader exists
+if (file_exists($vendorAutoload)) {
+    // Load Composer's autoloader if found
+    require_once $vendorAutoload;
+} else {
+    // Load the custom fallback autoloader if Composer's is not available
+    // Assuming bootstrap.php is in 'app/bootstrap/' and your autoloader is in 'app/Core/helpers/'
+    require_once __DIR__.'/../Core/helpers/autoload.php';
+}
+
 require_once __DIR__.'/../Core/helpers/register.php';
 
 // Khởi tạo session nếu chưa có
