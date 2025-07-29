@@ -156,6 +156,10 @@ class User
 
 ### Creating a View
 
+Views can be created using either Blade templates or standard PHP files. Here are examples of both approaches:
+
+#### Using Blade Template
+
 ```php:c:\Laragron\www\mvc_simple\app\Views\users\index.blade.php
 @extends('layouts.app')
 
@@ -163,14 +167,21 @@ class User
     <div class="container">
         <h1>Users List</h1>
         @foreach($users as $user)
-            <div class="card mb-3">
-                <div class="card-body">
-                    <h5 class="card-title">{{ $user->name }}</h5>
-                </div>
-            </div>
+            <p>{{ $user->name }}</p>
         @endforeach
     </div>
 @endsection
+```
+
+#### Using Standard PHP File
+
+```php:c:\Laragron\www\mvc_simple\app\Views\users\show.php
+<?php view('layouts.app'); ?>
+
+<div class="container">
+    <h1>User Details</h1>
+    <p>Name: <?php echo $user->name; ?></p>
+</div>
 ```
 
 ## Storage
